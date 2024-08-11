@@ -2,7 +2,160 @@
 
 @using Vizor.ECharts;
 @using Vizor.ECharts.Samples.Areas.Line;
+@using System.Text.Json;
+@using System.Text.Json.Serialization;
 
 <PageHeader Title="Simple Line Chart" SourceLink="@typeof(SimpleLineChart)" />
 
-<SimpleLineChart />
+
+
+<Vizor.ECharts.EChart @ref="@chart" Options="@options" Width="auto" Height="400px" />
+
+<button class="btn btn-primary" @onclick="AddChartData">Add data</button>
+
+
+@code {
+    private ChartOptions? options;
+    private EChart? chart;
+
+    protected override void OnInitialized()
+    {
+        options = CreateChartOptions();
+    }
+
+    private ChartOptions CreateChartOptions()
+    {
+        return new ChartOptions
+            {
+                Title = new()
+                {
+                    Text = "Basic Area Chart"
+                },
+                Tooltip = new()
+                {
+                    Trigger = TooltipTrigger.Axis,
+                    AxisPointer = new()
+                    {
+                        Type = AxisPointerType.Shadow
+                    }
+                },
+                XAxis = new() { Type = AxisType.Time },
+                YAxis = new() { Type = AxisType.Value },
+                Grid = new()
+                {
+                    Left = "3%",
+                    Right = "4%",
+                    Bottom = "3%",
+                    ContainLabel = true
+                },
+                Series = CreateSeries(),
+                Dataset = CreateDataset(),
+                Legend = new() { Data = new[] { "Line 1", "Line 2" } }
+            };
+    }
+
+    private List<ISeries> CreateSeries()
+    {
+        return new List<ISeries>
+        {
+            new LineSeries()
+            {
+                Name = "Line 1",
+                Encode = new()
+                {
+                    X = "Timestamp",
+                    Y = "Value0"
+                }
+            },
+            new LineSeries()
+            {
+                Name = "Line 2",
+                Encode = new()
+                {
+                    X = "Timestamp",
+                    Y = "Value1"
+                }
+            }
+        };
+    }
+
+    private Dataset CreateDataset()
+    {
+        return new Dataset
+            {
+                Dimensions = new[] { "Timestamp", "Value0", "Value1" },
+                Source = new List<AcquisitionBase>
+                {
+                    new AcquisitionBase { Timestamp = new DateTime(2011, 01, 01), Values = new List<float> { 150, 220 } },
+                    new AcquisitionBase { Timestamp = new DateTime(2011, 01, 02), Values = new List<float> { 230, 182 } },
+                    new AcquisitionBase { Timestamp = new DateTime(2011, 01, 03), Values = new List<float> { 224, 191 } },
+                    new AcquisitionBase { Timestamp = new DateTime(2011, 01, 04), Values = new List<float> { 218, 234 } },
+                    new AcquisitionBase { Timestamp = new DateTime(2011, 01, 05), Values = new List<float> { 135, 290 } },
+                    new AcquisitionBase { Timestamp = new DateTime(2011, 01, 06), Values = new List<float> { 147, 330 } },
+                    new AcquisitionBase { Timestamp = new DateTime(2011, 01, 07), Values = new List<float> { 260, 310 } }
+                }
+            };
+    }
+
+    private async Task LoadChartData()
+    {
+        //Testa o uso para dados dinamicos
+
+        if (chart != null)
+            await chart.UpdateAsync();
+    }
+
+    private async Task AddChartData()
+    {
+
+        // Adiciona novos dados dinamicamente com timestamps gerados dinamicamente
+        var lastTimestamp = (options?.Dataset?.Source as List<AcquisitionBase>)?.LastOrDefault()?.Timestamp ?? DateTime.Now;
+
+        var newData = new List<AcquisitionBase>
+        {
+            new AcquisitionBase { Timestamp = lastTimestamp.AddDays(1), Values = new List<float> { 300, 400 } },
+            new AcquisitionBase { Timestamp = lastTimestamp.AddDays(2), Values = new List<float> { 280, 390 } },
+            new AcquisitionBase { Timestamp = lastTimestamp.AddDays(3), Values = new List<float> { 350, 420 } }
+        };
+
+        // Adiciona os novos dados à fonte existente
+        if (options?.Dataset?.Source is List<AcquisitionBase> sourceList)
+        {
+            sourceList.AddRange(newData);
+        }
+
+        if (chart != null)
+            await chart.UpdateAsync();
+    }
+
+    [JsonConverter(typeof(AcquisitionBaseConverter))]
+    public class AcquisitionBase
+    {
+        public DateTime Timestamp { get; set; }
+        public List<float> Values { get; set; } = new();
+
+    }
+
+    public class AcquisitionBaseConverter : JsonConverter<AcquisitionBase>
+    {
+        public override AcquisitionBase Read(ref Utf8JsonReader reader, Type typeToConvert, JsonSerializerOptions options)
+        {
+            throw new NotImplementedException("Deserialization is not implemented in this example.");
+        }
+
+        public override void Write(Utf8JsonWriter writer, AcquisitionBase value, JsonSerializerOptions options)
+        {
+            writer.WriteStartObject();
+            writer.WriteString("Timestamp", value.Timestamp.ToString("o")); // ISO 8601 format
+
+            // Serializa cada valor na lista `Values` como `Value0`, `Value1`, etc.
+            for (int i = 0; i < value.Values.Count; i++)
+            {
+                writer.WriteNumber($"Value{i}", value.Values[i]);
+            }
+
+            writer.WriteEndObject();
+        }
+    }
+}
+
