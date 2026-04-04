@@ -1,7 +1,7 @@
-﻿<Project Sdk="Microsoft.NET.Sdk.Razor">
+<Project Sdk="Microsoft.NET.Sdk.Razor">
 
 	<PropertyGroup>
-		<TargetFramework>net6.0</TargetFramework>
+		<TargetFramework>net10.0</TargetFramework>
 		<Nullable>enable</Nullable>
 		<ImplicitUsings>enable</ImplicitUsings>
 		<AddRazorSupportForMvc>true</AddRazorSupportForMvc>
@@ -9,11 +9,11 @@
 
 		<Authors>DataHint BV, Ben Motmans</Authors>
 		<Company>DataHint BV</Company>
-		<Copyright>Copyright © DataHint BV - 2023</Copyright>
+		<Copyright>Copyright © DataHint BV - 2023-2026</Copyright>
 
 		<Product>Vizor ECharts components for Blazor</Product>
 		<ProductName>Vizor.ECharts</ProductName>
-		<Version>0.9.1</Version>
+		<Version>0.9.4</Version>
 		<ProductVersion>$(Version)</ProductVersion>
 		<AssemblyVersion>$(Version)</AssemblyVersion>
 		<FileVersion>$(Version)</FileVersion>
@@ -31,7 +31,8 @@
 	</PropertyGroup>
 
 	<ItemGroup>
-		<FrameworkReference Include="Microsoft.AspNetCore.App" />
+		<PackageReference Include="Microsoft.AspNetCore.Components" Version="10.0.1" />
+		<PackageReference Include="Microsoft.JSInterop" Version="10.0.1" />	
 	</ItemGroup>
 
 	<ItemGroup>
@@ -39,8 +40,8 @@
 	</ItemGroup>
 
 	<ItemGroup>
-		<Folder Include="wwwroot\" />
-		<Folder Include="wwwroot\js\" />
+		<Folder Include="wwwroot\" Pack="true"/>
+		<Folder Include="wwwroot\js\" Pack="true"/>
 	</ItemGroup>
 
 	<ItemGroup>
